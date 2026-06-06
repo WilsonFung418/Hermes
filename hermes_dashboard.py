@@ -13,6 +13,8 @@ from datetime import datetime
 
 PORT = 8081
 GATEWAY_HOST = "YOUR_GATEWAY_IP"  # e.g. 192.168.1.170
+HERMES_NUMBER = "YOUR_HERMES_NUMBER"  # Target WhatsApp number
+SSH_USER = "YOUR_SSH_USER"  # SSH username on gateway
 AGENT_LOG = "/root/.hermes/logs/agent.log"
 STATE_DB = "/root/.hermes/state.db"
 AUTH = ("YOUR_USERNAME", "YOUR_PASSWORD")
@@ -196,7 +198,7 @@ class Handler(BaseHTTPRequestHandler):
                         elif "Sending response (" in line:
                             msgs.append({"role": "assistant", "sender": "Hermes", "platform": "WhatsApp", "body": "[response sent]", "timestamp": line[:19]})
             msgs.reverse()
-            self.send_json({"messages": msgs, "total": len(msgs), "model": model, "target": "+85265554156"})
+            self.send_json({"messages": msgs, "total": len(msgs), "model": model, "target": HERMES_NUMBER})
         elif path == '/api/chat_send':
             body = q.get("text", [""])[0]
             if not body:
@@ -206,9 +208,9 @@ class Handler(BaseHTTPRequestHandler):
                 safe = body.replace("'", "'\\''")
                 r = subprocess.run(
                     ["ssh", "-o", "StrictHostKeyChecking=no",
-                     "wilson@" + GATEWAY_HOST + "",
+                     "SSH_USER@" + GATEWAY_HOST + "",
                      "openclaw", "message", "send", "--channel", "whatsapp",
-                     "--target", "+85265554156", "--message", body],
+                     "--target", HERMES_NUMBER, "--message", body],
                     capture_output=True, text=True, timeout=60)
                 self.send_json({"status": "sent" if r.returncode == 0 else "error", "output": (r.stdout.strip() or r.stderr.strip())[:200]})
             except Exception as e:
@@ -217,7 +219,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 r = subprocess.run(
                     ["ssh", "-o", "StrictHostKeyChecking=no",
-                     "wilson@" + GATEWAY_HOST + "",
+                     "SSH_USER@" + GATEWAY_HOST + "",
                      "cd /root/.openclaw/workspace && /root/.openclaw/workspace/vibe_env/bin/python /root/.openclaw/workspace/scripts/hermes_monitor.py 2>&1"],
                     capture_output=True, text=True, timeout=120)
                 self.send_json({"status": "done", "output": r.stdout[:500]})
@@ -227,7 +229,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 subprocess.run(
                     ["ssh", "-o", "StrictHostKeyChecking=no",
-                     "wilson@" + GATEWAY_HOST + "",
+                     "SSH_USER@" + GATEWAY_HOST + "",
                      "pkill -f hermes_monitor 2>/dev/null; nohup /root/.openclaw/workspace/vibe_env/bin/python /root/.openclaw/workspace/scripts/hermes_monitor.py > /tmp/hermes_monitor.log 2>&1 &"],
                     capture_output=True, text=True, timeout=30)
                 self.send_json({"status": "restarted"})
@@ -238,7 +240,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 r = subprocess.run(
                     ["ssh", "-o", "StrictHostKeyChecking=no",
-                     "wilson@" + GATEWAY_HOST + "",
+                     "SSH_USER@" + GATEWAY_HOST + "",
                      "cat /tmp/hermes_monitor.log 2>/dev/null; echo '---'; cat /tmp/financial_report.log 2>/dev/null"],
                     capture_output=True, text=True, timeout=30)
                 logs = r.stdout[-2000:]
@@ -269,9 +271,9 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 r = subprocess.run(
                     ["ssh", "-o", "StrictHostKeyChecking=no",
-                     "wilson@" + GATEWAY_HOST + "",
+                     "SSH_USER@" + GATEWAY_HOST + "",
                      "openclaw", "message", "send", "--channel", "whatsapp",
-                     "--target", "+85265554156", "--message", msg],
+                     "--target", HERMES_NUMBER, "--message", msg],
                     capture_output=True, text=True, timeout=60)
                 self.send_json({"status": "sent" if r.returncode == 0 else "error", "output": (r.stdout.strip() or r.stderr.strip())[:200]})
             except Exception as e:
