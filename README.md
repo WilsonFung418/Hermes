@@ -55,7 +55,7 @@ Edit `PORT = 8081` in the file to change it.
 Edit the `AUTH` tuple at the top of the file:
 ```python
 AUTH = ("your_username", "your_password")
-GATEWAY_HOST = "192.168.1.170"  # Your gateway IP
+GATEWAY_HOST = "YOUR_GATEWAY_IP"  # Your gateway IP
 ```
 
 ### SSH / Message Sending
@@ -66,10 +66,10 @@ To enable **sending messages** from the dashboard, the script needs:
 
 Set up SSH key-based auth, or set the password via env var HERMES_SSH_PASS:
 ```python
-SSH_HOST = "192.168.1.170"
-SSH_USER = "wilson"
+SSH_HOST = "YOUR_GATEWAY_IP"
+SSH_USER = "YOUR_SSH_USER"
 SSH_PASS = ""  # Set password or use SSH key
-HERMES_NUMBER = "+85265554156"
+HERMES_NUMBER = "YOUR_HERMES_NUMBER"
 ```
 
 Update these to match your setup.
